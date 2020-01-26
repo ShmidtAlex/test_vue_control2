@@ -46,7 +46,18 @@ export default {
   // },
   computed: {
     inputVal: function() {
-      
+      let commitName = 'changeControlValue' + this.index;
+      if (this.index > 0 && this.twinData) {
+        // this.$store.commit(commitName, this.twinData);
+        this.$store.commit(commitName, this.twinData);
+        return this.twinData;
+      }else if (this.index > 0 && !this.twinData){
+        return this.recordedVal;
+      }
+       else {
+        this.$store.commit(commitName, this.recordedVal);
+        return this.recordedVal;
+      }
       
     },
     expandStatus: function() {
