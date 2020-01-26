@@ -1,20 +1,22 @@
 <template>
   <div class="component_wrapper">
-    <div class="input-wrapper" >
-     <input :id="'input' + index" class="standart_view" type="text" min="0" 
-        @keypress="validateInput" 
+    <div class="input-wrapper">
+     <input :id="'input' + index" class="standart_view" :type="runningType" min="0" 
+        :tabindex="index + 1" 
+        @keyup="validateInput" 
+        @keypress="changeFormat"
         @focus="expandInput" 
         @blur="treatInputData" 
         @keydown="saveAndTab"
-        @mouseup="fillValue"
         :class="{expanded: expandStatus}"  
         :placeholder="initialPlaceholderVal" 
-        :value="inputVal" 
+        :value="value"
+        autocomplete="off" 
       />
        <span v-if="!expandStatus" class="arrow_container"></span>
        <span v-else class="value_arrows">
-         <span @click="increase" class="increment"></span>
-         <span @click="decrease" class="decrement"></span>
+         <span @click="increase" @mouseover="stayInFocus" @mouseleave="noBlur = false" class="increment"></span>
+         <span @click="decrease" @mouseover="stayInFocus" @mouseleave="noBlur = false"  class="decrement"></span>
        </span>
     </div>
     <button class="defaultBut" v-if="index === 0" @click="summValue">Summ</button>
@@ -28,201 +30,184 @@ export default {
   name: "SellItem",
   props: {
     index: Number,
-    twinData: String
+    twinData: String,
+    type: String,
+    isExpand: Boolean,
+    flagState: Boolean
   },
   data: function(){
     return {
       initialPlaceholderVal: '0',
-      isExpand: false,
-      // recordedVal: this.index === 0 ? null : this.$store.state.runningVal,
-      recordedVal: null,
+      isExpandLocal: false,
+      recordedVal: this.$store.state.runningVal ? this.$store.runningVal : null,
       defaultVal: '1 000',
+      typeLocal: 'number',
+      noBlur: false
     }
   },
-  //  watch: {
-  //   input_1Val: function(newVal, oldVal) {
-  //     this.$store.commit('changeControlValue1', newVal);
-  //   },
-  // },
+  mounted: function() {
+    
+  },
+  watch: {
+    value: function(newVal) {
+      if(this.index > 0) {
+        // console.log(newVal)
+        let commitMethodName = 'changeControlValue' + this.index;
+        this.$store.commit(commitMethodName, newVal);
+      }
+    }
+  },
   computed: {
-    inputVal: function() {
-      let commitName = 'changeControlValue' + this.index;
-      if (this.index > 0 && this.twinData) {
-        // this.$store.commit(commitName, this.twinData);
-        this.$store.commit(commitName, this.twinData);
+    value: function() {
+      if(this.twinData === null && this.index > 0 || this.index === 0) {
+        return this.recordedVal;
+      } else {
         return this.twinData;
-      }else if (this.index > 0 && !this.twinData){
-        return this.recordedVal;
       }
-       else {
-        this.$store.commit(commitName, this.recordedVal);
-        return this.recordedVal;
-      }
-      
     },
-    expandStatus: function() {
-      if(this.inputVal === this.defaultVal) {
-        this.isExpand = true;
+    expandStatus:function(){
+      if(this.isExpand && this.index > 0){
+        return this.isExpand;
+      } else {
+        return this.isExpandLocal;
       }
-      return this.isExpand;
     },
+    runningType: function(){
+      if(this.type) {
+        return this.type;
+      } else {
+        return this.typeLocal;
+      }
+    }
   },
   methods: {
-    expandInput: function(){
-      let eventElem = event.target;
-      if (this.recordedVal) {
-          this.changeInputType(event.target, 'text');
-          event.target.value = this.recordedVal;
-      } else {
-         eventElem.setAttribute('placeholder', '');
-      }
-        this.changeInputType(event.target, 'number');
-        this.isExpand = true;
-    },
-
-    summValue:function() {
-      let self = this;
-      let control0 = this.transformToNumber(this.inputVal);
-      let control1 = this.transformToNumber(this.$store.state.control1);
-      let control2 = this.transformToNumber(this.$store.state.control2);
-      this.recordedVal = control0 + control1 + control2;
-      this.isExpand = true;
-    },
-
-    transformToNumber: function(val) {
-      let transformedVal;
-      if(val === null) {
-        return 0;
-      } else if (typeof val === 'number') {
-        return val;
-      }
-       else {
-        transformedVal = val.split(' ').join('');
-        return Number(transformedVal);
-      }
-    },
-
-    fillValue: function(){
-      let transformedVal;
-      if(typeof this.recordedVal === 'string') {
-        transformedVal = this.recordedVal.split(' ').join('');
-         event.target.value = Number(transformedVal);
-      } else {
-        transformedVal = this.recordedVal;
-      }
-    },
-
-    fillWithDefaultValue: function() {
-      this.recordedVal = this.defaultVal;
-      if(this.index > 0) {
-        this.$emit("dataChange", this.defaultVal);
-      }
-    },
-
+    // прямые
     validateInput: function(event) {
       let regPattern = /[0-9]/g;
       let key = event.keyCode;
       let eventVal;
-       if(!this.recordedVal) {
-        eventVal = event.target.value;
-          if(key === 44 || key === 46 || key === 101 ) {
-            event.returnValue = false;
-            if(event.preventDefault) {
-              event.preventDefault();
-            }
-          } else {
-            if (this.index > 0) {
-              this.$emit("dataChange", eventVal);
-              this.recordedVal = this.numberWithSpaces(eventVal);
-            }
-          }
-       } else {
-        eventVal = this.recordedVal;
-        // this.$emit("dataChange", eventVal);
-       }
+          eventVal = event.target.value;
+          this.recordedVal = eventVal;
+      if(key === 44 || key === 46 || key === 101 ) {
+        event.returnValue = false;
+        if(event.preventDefault) {
+          event.preventDefault();
+        }
+      }
+      if(this.index > 0) {
+        this.$emit('dataChange', eventVal);
+      }
+    },
+    changeFormat: function() {
+      let eventVal = event.target.value;
+      let key = event.keyCode;
       if (eventVal !== '' && eventVal !== 0 && key === 13) {
+        // console.log(true);
         this.changeInputType(event.target, 'text');
-        this.recordedVal = this.numberWithSpaces(eventVal);
+        this.recordedVal = this.transformStringToSeparate(eventVal);
+        if(this.index > 0) {
+          this.$emit('dataChange', this.recordedVal);
+          this.$emit('typeChange', 'text');
+        }
       } 
     },
-
+    expandInput: function(){
+      if(this.$store.state.runningVal && this.index > 0) {
+        this.recordedVal = this.$store.state.runningVal;
+      }
+      this.isExpandLocal = true;
+      if(!this.flagState) {
+        this.changeInputType(event.target, 'number');
+      }
+      if(this.recordedVal) {
+        event.target.value = this.convertValueToNumber(this.recordedVal);
+      }
+    },
+    treatInputData: function(){
+      if(!this.flagState && !this.noBlur) {
+        this.recordedVal = null;
+        this.$emit('dataChange', null);
+        this.isExpandLocal = false;
+      }
+    },
     saveAndTab: function() {
       let key = event.keyCode;
       let eventVal = event.target.value;
-      if (eventVal !== '' && eventVal !== 0 && (key === 9) ) {
+      if (eventVal !== '' && eventVal !== 0 && key === 9 ) {
+        this.$emit('setTabFlag', true)
         this.changeInputType(event.target, 'text');
-        this.recordedVal = this.numberWithSpaces(eventVal);
+        this.recordedVal = this.transformStringToSeparate(eventVal);
+        if(this.index > 0) {
+          this.$emit('typeChange', 'text');
+          this.$emit('dataChange', this.transformStringToSeparate(eventVal));
+        }
       } 
     },
-
+    stayInFocus:function() {
+      this.noBlur = true;
+    },
     increase: function(){
-      let transformedVal;
       document.querySelectorAll('.standart_view')[this.index].focus();
-      if(typeof this.recordedVal === 'string') {
-        transformedVal = this.recordedVal.split(' ').join('');
-         this.recordedVal = Number(transformedVal);
-         transformedVal = this.recordedVal;
-         this.recordedVal++;
-      } else {
-        transformedVal = this.recordedVal;
-        this.recordedVal++;
-      }
-    },
-
-    decrease: function() {
-      let transformedVal;
+      let increasingVal = this.convertValueToNumber(this.value);
       document.querySelectorAll('.standart_view')[this.index].focus();
-      if(typeof this.recordedVal === 'string') {
-        transformedVal = this.recordedVal.split(' ').join('');
-        this.recordedVal = Number(transformedVal);
-        transformedVal = this.recordedVal;
-        this.recordedVal--;
+        increasingVal++;
+        this.recordedVal = increasingVal;
+        if(this.index > 0) {
+          this.$emit('dataChange', this.recordedVal.toString());
+          this.$emit('typeChange', '');
+        }
+    },
+    decrease: function(){
+      document.querySelectorAll('.standart_view')[this.index].focus();
+      let decreasingVal = this.convertValueToNumber(this.value);
+      document.querySelectorAll('.standart_view')[this.index].focus();
+          decreasingVal--;
+      this.recordedVal = decreasingVal;
+      if(this.index > 0) {
+          this.$emit('dataChange', this.recordedVal.toString());
+          this.$emit('typeChange', '');
+        }
+    },
+    summValue: function() {
+      let control1 = this.convertValueToNumber(this.$store.state.control1);
+      let control2 = this.convertValueToNumber(this.$store.state.control2);
+          this.recordedVal = control1 + control2;
+          this.isExpandLocal = true;
+    },
+    fillWithDefaultValue: function() {
+      let commitMethodName = 'changeControlValue' + this.index;
+      this.recordedVal = this.defaultVal;
+      if(this.index > 0){
+        this.$emit('dataChange', this.defaultVal);
+        this.$emit('typeChange', 'text');
+        this.$store.commit(commitMethodName, this.defaultVal);
+        this.$store.commit('changeRunningVal', this.defaultVal);
+      }
+
+    },
+    //служебные:
+    convertValueToNumber: function(convertedVal){
+      if(convertedVal === null) {
+        console.log('save value with tab or enter key before count summ!!!');
+        return;
+      } 
+      if( typeof convertedVal !== 'number') {
+        convertedVal = convertedVal.split(' ').join('');
+        return Number(convertedVal);
       } else {
-        transformedVal = this.recordedVal;
-        this.recordedVal--;
+        return convertedVal;
       }
     },
-
-    numberWithSpaces: function(inputValue) {
-      if (typeof inputValue === 'number') {
-        inputValue = inputValue.toString();
+    transformStringToSeparate: function(str) {
+      if (typeof str !== 'string') {
+        str = str.toString();
       }
-      let parts = inputValue.split(".");
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");//explanation
-        return parts[0];
+      let parts = str.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
+        return parts;
     },
-
     changeInputType: function(eventElem, type) {
       eventElem.setAttribute('type', type);
     },
-    
-    treatInputData: function() {
-      let inputVal;
-      let numberLength;
-          inputVal = event.target.value;
-     
-      this.changeInputType(event.target, 'text');
-
-        if (inputVal || inputVal.length) {
-          numberLength = inputVal.length*10;
-          event.target.style.minWidth = `${numberLength}px`;
-        } else {
-          event.target.setAttribute('placeholder', this.initialPlaceholderVal);
-          event.target.style.minWidth = '0px';
-          // this.recordedVal = null;
-          // this.isExpand = false;
-        }  
-        if(this.recordedVal === null){
-          this.isExpand = false;
-          event.target.style.minWidth = '0px';
-          event.target.setAttribute('placeholder', this.initialPlaceholderVal);
-        } else {
-          this.isExpand = true;
-        }
-        
-          event.target.value = this.numberWithSpaces(inputVal);
-          
-    }
   }
 };
 </script>

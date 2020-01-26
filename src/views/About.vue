@@ -5,7 +5,7 @@
       <h3>Here are three controls</h3>
       <div class="controls_themselvs">
         <div v-for="(sellItem, index)  in sellItems"  :key="index" class="control">
-          <SellItem @dataChange="isInputData" :twinData="modifiedData" :index="index" />
+          <SellItem @setTabFlag="turnFlag" @dataChange="isInputData" @typeChange="isTypeChanged" :flagState="flagState"  :isExpand="isExpand" :type="parentType" :twinData="twinData" :index="index" />
         </div>
       </div>
     </div>
@@ -25,8 +25,10 @@
          value1: this.$store.state.control1,
          value2: this.$store.state.control2,
          value3: this.$store.state.control3,
+         parentType: '',
          sellItems: 3,
-         twinData: null
+         twinData: null,
+         tabFlag: false
       }
     },
     mounted: function(){
@@ -45,23 +47,33 @@
             // console.log(e.keyCode);
           });
         })
-
-
     },
    
    
     computed: {
       modifiedData: function() {
         return this.twinData;
+      },
+      isExpand: function() {
+        if(this.twinData) {
+          return true;
+        }
+      },
+      flagState: function() {
+        return this.tabFlag;
       }
     },
     methods: {
       isInputData: function(data) {
         this.twinData = data;
+      },
+      isTypeChanged: function(data) {
+        this.parentType = data;
+      },
+      turnFlag: function(data) {
+        this.tabFlag = data;
       }
-      // this.$emit("dataChange", eventVal);
     } 
-    
   }
   
 </script>
