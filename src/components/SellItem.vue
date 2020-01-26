@@ -46,18 +46,7 @@ export default {
   // },
   computed: {
     inputVal: function() {
-      let commitName = 'changeControlValue' + this.index;
-      if (this.index > 0 && this.twinData) {
-        // this.$store.commit(commitName, this.twinData);
-        this.$store.commit(commitName, this.twinData);
-        return this.twinData;
-      }else if (this.index > 0 && !this.twinData){
-        return this.recordedVal;
-      }
-       else {
-        this.$store.commit(commitName, this.recordedVal);
-        return this.recordedVal;
-      }
+      
       
     },
     expandStatus: function() {
@@ -133,6 +122,7 @@ export default {
           } else {
             if (this.index > 0) {
               this.$emit("dataChange", eventVal);
+              this.recordedVal = this.numberWithSpaces(eventVal);
             }
           }
        } else {
@@ -208,8 +198,8 @@ export default {
         } else {
           event.target.setAttribute('placeholder', this.initialPlaceholderVal);
           event.target.style.minWidth = '0px';
-          this.recordedVal = null;
-          this.isExpand = false;
+          // this.recordedVal = null;
+          // this.isExpand = false;
         }  
         if(this.recordedVal === null){
           this.isExpand = false;
