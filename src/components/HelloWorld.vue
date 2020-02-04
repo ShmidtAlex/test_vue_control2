@@ -2,14 +2,25 @@
   <div class="hello">
     <h1>This is the test work</h1>
     <h3>For checking how it's working, click on 'Test" link</h3>
+    <!--  for reusing the component on main page uncomment next element -->
+    <!-- <control-group /> -->
   </div>
 </template>
 
 <script>
+
+import controlGroup from '../components/controlGroup';
+
 export default {
   name: "HelloWorld",
+  components: {
+    controlGroup
+  },
   props: {
     msg: String
+  },
+  data: function(){
+    return {}
   }
 };
 </script>
