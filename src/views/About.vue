@@ -33,6 +33,7 @@
         elem.addEventListener("keydown", e => {});
         elem.addEventListener("keyup", e => {});
         elem.addEventListener("keypress", e => {});
+        // elem.addEventListener("input", e => {});
       })
     },
     computed: {

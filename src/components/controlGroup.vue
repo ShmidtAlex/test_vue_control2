@@ -10,11 +10,12 @@
         <div class="input_block">
           <div class="title" :class="{blue_color: focusedColor}">HUG IS</div>
           <div class="input-wrapper"> 
-             <input class="standart_view" :size="transformedValLength" :type="typeLocal"
+             <input class="standart_view" :type="typeLocal"
                 @keyup="pushWholeValue"
                 @keypress="changeFormat"
                 @focus="changeColor" 
                 @blur="treatInputData" 
+                @input="checkLength"
                 :placeholder="initialPlaceholderVal" 
                 :value="value"
                 autocomplete="off" 
@@ -47,29 +48,35 @@ export default {
   },
 
   computed: {
-
     value: function() {
       if(this.transformedVal) {
         return this.transformedVal;
       } 
     },
-
-    transformedValLength: function() {
-      if (this.transformedVal && this.transformedVal.length > 7) {
-        return this.transformedVal.length-1;
-      } else {
-        return 7;
-      }
-    }
-
   },
 
   methods: {
     changeFormat: function() {
       let eventVal = event.target.value;
-      this.recordedVal = event.target.value;
-      let key = event.keyCode;
-      this.validateInput(key);
+      let key = event.keyCode;      
+      this.recordedVal = event.target.value;     
+      this.validateInput(key); 
+    },
+
+    checkLength: function(){
+      let factor;
+      if (this.transformedVal.length >= 7){
+        let lght = this.transformedVal.length;
+          if (lght <= 9) {
+            factor = 8;
+          } else if (lght >= 10 || lght <= 17) {
+            factor = 7;
+          } else {
+            factor = 4;
+          }
+      }
+      //if length of input is too loong, it limits decreasing
+      event.target.style.minWidth = ((this.transformedVal.length + 1) * factor) < 161 ? `${((this.transformedVal.length + 1) * factor)}px` : ((this.transformedVal.length + 1));
     },
 
     pushWholeValue: function(){
@@ -83,10 +90,6 @@ export default {
     treatInputData: function(){
       this.focusedColor = false;
       this.recordedVal = this.transformedVal;
-    },
-    
-    stayInFocus:function() {
-      this.noBlur = true;
     },
     
     validateInput: function(key) {
@@ -187,8 +190,7 @@ export default {
   line-height: 1.21;
   letter-spacing: normal;
   color: #2c2c30;
-  min-width: fit-content;
-  min-width: -moz-max-content;
+  max-width: 161px;
 }
 .title.blue_color {
   color: #2540ff;
