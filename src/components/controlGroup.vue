@@ -10,7 +10,7 @@
         <div class="input_block">
           <div class="title" :class="{blue_color: focusedColor}">HUG IS</div>
           <div class="input-wrapper"> 
-             <input class="standart_view" :type="typeLocal"
+             <input id="exactInput" class="standart_view" :type="typeLocal"
                 @keyup="pushWholeValue"
                 @keypress="changeFormat"
                 @focus="changeColor" 
@@ -43,44 +43,43 @@ export default {
       typeLocal: 'string',
       focusedColor: false,
       recordedVal: null,
-      transformedVal: ''
+      transformedVal: '',
+      runningCursorPosition: null
     }
   },
-
   computed: {
     value: function() {
       if(this.transformedVal) {
         return this.transformedVal;
       } 
     },
+    position: function() {
+      return this.runningCursorPosition;
+    }
   },
 
   methods: {
     changeFormat: function() {
       let eventVal = event.target.value;
-      let key = event.keyCode;      
+      let key = event.keyCode;  
       this.recordedVal = event.target.value;     
       this.validateInput(key); 
     },
 
     checkLength: function(){
-      let factor;
-      if (this.transformedVal.length >= 7){
-        let lght = this.transformedVal.length;
-          if (lght <= 9) {
-            factor = 8;
-          } else if (lght >= 10 || lght <= 17) {
-            factor = 7;
-          } else {
-            factor = 4;
-          }
+      if (this.transformedVal.length >= 7 && event.inputType !== 'deleteContentBackward'){
+        event.target.style.width = (event.target.scrollWidth + 4) + "px";
+      } else if (this.transformedVal.length > 7 && event.inputType === 'deleteContentBackward') {
+        event.target.style.width = (this.transformedVal.length *7) + 'px';
       }
-      //if length of input is too loong, it limits decreasing
-      event.target.style.minWidth = ((this.transformedVal.length + 1) * factor) < 161 ? `${((this.transformedVal.length + 1) * factor)}px` : ((this.transformedVal.length + 1));
     },
 
     pushWholeValue: function(){
+      let caretPosition = event.target.selectionStart;
       this.transformedVal = event.target.value.toString().split(' ').join('').replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
+      this.$nextTick(() => {
+        event.target.selectioinStart = event.target.selectionEnd = caretPosition;
+      })
     },
 
     changeColor: function(){
@@ -97,6 +96,8 @@ export default {
         event.returnValue= false;
       }
     },
+
+
   }
 };
 </script>
@@ -174,7 +175,7 @@ export default {
   letter-spacing: 0.8px;
   text-align: center;
   color: #2c2c30;
-  margin: 2px 0 0 16px;
+  margin: 2px 0 0 15px;
 }
 .standart_view {
   border: none;
