@@ -16,6 +16,7 @@
                 @focus="changeColor" 
                 @blur="treatInputData" 
                 @input="checkLength"
+                
                 :placeholder="initialPlaceholderVal" 
                 :value="value"
                 autocomplete="off" 
@@ -44,7 +45,8 @@ export default {
       focusedColor: false,
       recordedVal: null,
       transformedVal: '',
-      runningCursorPosition: null
+      globalDefinedCaretPosition: null,
+      factor: 0
     }
   },
   computed: {
@@ -53,12 +55,20 @@ export default {
         return this.transformedVal;
       } 
     },
-    position: function() {
-      return this.runningCursorPosition;
-    }
   },
 
   methods: {
+    // checkClickedSelectionStart: function() {
+    //   var position = event.target.selectionStart;
+    //   console.log(position);
+    //   if(event.target.value.length > 0) {
+    //     this.$nextTick(function() {
+    //       console.log("worked");
+    //       this.globalDefinedCaretPosition = position;
+    //     })
+    //   }
+      
+    // },
     changeFormat: function() {
       let eventVal = event.target.value;
       let key = event.keyCode;  
@@ -77,9 +87,15 @@ export default {
     pushWholeValue: function(){
       let caretPosition = event.target.selectionStart;
       this.transformedVal = event.target.value.toString().split(' ').join('').replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1 ');
+      
+      this.factor = this.transformedVal.length - this.transformedVal.split(' ').join('').length;
+
+      if(this.factor > 0 && caretPosition === this.transformedVal.length-1) {
+        caretPosition += this.factor;
+      }
       this.$nextTick(() => {
-        event.target.selectioinStart = event.target.selectionEnd = caretPosition;
-      })
+        event.target.selectionStart = event.target.selectionEnd = caretPosition;
+      });
     },
 
     changeColor: function(){
